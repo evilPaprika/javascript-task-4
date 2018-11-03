@@ -44,9 +44,16 @@ function getEmitter() {
                 if (callback.context === context) {
                     this.listeners[event].splice(index, 1);
 
-                    return this;
+                    break;
                 }
             }
+            for (const key in this.listeners) {
+                if (key.startsWith(event + '.')) {
+                    this.off(key, context);
+                }
+            }
+
+            return this;
         },
 
         /**

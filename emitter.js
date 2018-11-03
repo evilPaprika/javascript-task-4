@@ -44,8 +44,6 @@ function getEmitter() {
             for (const [index, callback] of this.listeners[event].entries()) {
                 if (callback.context === context) {
                     this.listeners[event].splice(index, 1);
-
-                    break;
                 }
             }
             if (!isRecursion) {

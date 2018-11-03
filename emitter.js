@@ -89,9 +89,8 @@ function getEmitter() {
                     let counter = times;
 
                     return () => {
-                        if (counter) {
+                        if (counter--) {
                             handler.call(context);
-                            counter--;
                         }
                     };
                 }())

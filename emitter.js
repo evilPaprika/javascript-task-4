@@ -37,9 +37,10 @@ function getEmitter() {
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @param {bool} isRecursion
          * @returns {Object} this
          */
-        off: function (event, context) {
+        off: function (event, context, isRecursion = false) {
             for (const [index, callback] of this.listeners[event].entries()) {
                 if (callback.context === context) {
                     this.listeners[event].splice(index, 1);
@@ -47,10 +48,10 @@ function getEmitter() {
                     break;
                 }
             }
-            for (const key in this.listeners) {
-                if (key.startsWith(event + '.')) {
-                    this.off(key, context);
-                }
+            if (!isRecursion) {
+                Object.keys(this.listeners).forEach(
+                    key => key.startsWith(event + '.') && this.off(key, context, true)
+                );
             }
 
             return this;

@@ -8,6 +8,8 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+coverage/
+.nyc_output/
 
 # Project
 *.log

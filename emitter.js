@@ -11,14 +11,15 @@ const isStar = true;
  * @returns {Object}
  */
 function getEmitter() {
+    const listeners = new Proxy(
+        {},
+        {
+            get: (target, name) =>
+                target.hasOwnProperty(name) ? target[name] : (target[name] = [])
+        }
+    );
+
     return {
-        listeners: new Proxy(
-            {},
-            {
-                get: (target, name) =>
-                    target.hasOwnProperty(name) ? target[name] : (target[name] = [])
-            }
-        ),
 
         /**
          * Подписаться на событие
@@ -28,7 +29,7 @@ function getEmitter() {
          * @returns {Object} this
          */
         on: function (event, context, handler) {
-            this.listeners[event].push({ handler: handler.bind(context), context });
+            listeners[event].push({ handler: handler.bind(context), context });
 
             return this;
         },
@@ -41,13 +42,13 @@ function getEmitter() {
          * @returns {Object} this
          */
         off: function (event, context, isRecursion = false) {
-            for (const [index, callback] of this.listeners[event].entries()) {
+            for (const [index, callback] of listeners[event].entries()) {
                 if (callback.context === context) {
-                    this.listeners[event].splice(index, 1);
+                    listeners[event].splice(index, 1);
                 }
             }
             if (!isRecursion) {
-                Object.keys(this.listeners).forEach(
+                Object.keys(listeners).forEach(
                     key => key.startsWith(event + '.') && this.off(key, context, true)
                 );
             }
@@ -61,7 +62,7 @@ function getEmitter() {
          * @returns {Object} this
          */
         emit: function (event) {
-            for (const callback of this.listeners[event]) {
+            for (const callback of listeners[event]) {
                 callback.handler();
             }
             const removedAfterDot = event.replace(/\.[^.]+$/, '');
@@ -82,20 +83,13 @@ function getEmitter() {
          * @returns {Object} this
          */
         several: function (event, context, handler, times) {
-            this.on(
-                event,
-                context,
-                (function () {
-                    let counter = times;
-
-                    return () => {
-                        if (counter) {
-                            handler.call(context);
-                            counter--;
-                        }
-                    };
-                }())
-            );
+            let counter = times;
+            this.on(event, context, () => {
+                if (counter) {
+                    handler.call(context);
+                    counter--;
+                }
+            });
 
             return this;
         },
@@ -110,19 +104,12 @@ function getEmitter() {
          * @returns {Object} this
          */
         through: function (event, context, handler, frequency) {
-            this.on(
-                event,
-                context,
-                (function () {
-                    let counter = 0;
-
-                    return () => {
-                        if (!(counter++ % frequency)) {
-                            handler.call(context);
-                        }
-                    };
-                }())
-            );
+            let counter = 0;
+            this.on(event, context, () => {
+                if (!(counter++ % frequency)) {
+                    handler.call(context);
+                }
+            });
 
             return this;
         }

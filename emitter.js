@@ -47,10 +47,10 @@ function getEmitter() {
                     listeners[event].splice(index, 1);
                 }
             }
-            const childStartsWith = event + '.';
             if (!isRecursion) {
+                const childStartsWith = event + '.';
                 Object.keys(listeners).forEach(
-                    key => key.startsWith(childStartsWith) && this.off(key, context, true)
+                    listener => listener.startsWith(childStartsWith) && this.off(listener, context, true)
                 );
             }
 

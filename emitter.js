@@ -19,6 +19,19 @@ function getEmitter() {
         }
     );
 
+    /**
+     * Отписаться от события но не от детей события
+     * @param {String} event
+     * @param {Object} context
+     */
+    function unsubscribe(event, context) {
+        for (const [index, callback] of listeners[event].entries()) {
+            if (callback.context === context) {
+                listeners[event].splice(index, 1);
+            }
+        }
+    }
+
     return {
 
         /**
@@ -35,24 +48,17 @@ function getEmitter() {
         },
 
         /**
-         * Отписаться от события
+         * Отписаться от события и от детей события
          * @param {String} event
          * @param {Object} context
-         * @param {bool} isRecursion
          * @returns {Object} this
          */
-        off: function (event, context, isRecursion = false) {
-            for (const [index, callback] of listeners[event].entries()) {
-                if (callback.context === context) {
-                    listeners[event].splice(index, 1);
-                }
-            }
-            if (!isRecursion) {
-                const childStartsWith = event + '.';
-                Object.keys(listeners).forEach(
-                    listener => listener.startsWith(childStartsWith) && this.off(listener, context, true)
-                );
-            }
+        off: function (event, context) {
+            unsubscribe(event, context);
+            const childStartsWith = event + '.';
+            Object.keys(listeners).forEach(
+                listener => listener.startsWith(childStartsWith) && unsubscribe(listener, context)
+            );
 
             return this;
         },
